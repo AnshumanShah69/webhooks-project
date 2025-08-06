@@ -1,11 +1,13 @@
-import logo from "./logo.svg";
 import "./App.css";
-import Home from "./Pages/Home";
+import PaymentForm from "./Components/PaymentForm";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements } from "@stripe/react-stripe-js";
+const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 function App() {
   return (
-    <div>
-      <Home />
-    </div>
+    <Elements stripe={stripePromise}>
+      <PaymentForm />
+    </Elements>
   );
 }
 

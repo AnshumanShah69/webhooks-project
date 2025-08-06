@@ -1,5 +1,5 @@
-const Stripe = require("stripe");
 require("dotenv").config(); //loads the env variables from .env file to the process.env object
+const Stripe = require("stripe");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const express = require("express");
 const bodyParser = require("body-parser");
@@ -9,17 +9,27 @@ app.use(cors()); //Enabling CORS for all routes
 const port = 3000;
 
 app.use(bodyParser.json());
-// the post route to handle webhook data from the frontend
-// This route will receive the payment data from the frontend and can be used to process it further
-app.post("/webhook", (req, res) => {
-  console.log("Received webhook data from the frontend:", req.body); ///made change in msg
-  console.log("name", req.body.name);
-  console.log("email", req.body.email);
-  console.log("amount", req.body.amount);
-  // You can add more processing logic here if needed
-  // For example, save the payment details to a database or perform further actions
-  // Here you can process the webhook data as needed
-  res.status(200).send("Webhook data received successfully");
+// Updating the /webhook url to recieve data from the frontend and also to create a payment intent and send to stripe
+
+app.post("/webhook", async (req, res) => {
+  //recieving data from the frontend and creating a payment intent and returning the secret to the frontend
+  // console.log("Received webhook data from the frontend:", req.body);
+  const { name, email, amount } = req.body; //rec data from the frontend // destructuring the data from the request body
+  try {
+    //followed stripe api documentation to create a payment intent
+    const paymentIntent = await stripe.paymentIntents.create({
+      description: `The Customer is ${name}`,
+      currency: "USD",
+      amount: Math.round(Number(amount) * 100),
+      receipt_email: email,
+    });
+    res.status(200).send({
+      clientSecret: paymentIntent.client_secret,
+    });
+  } catch (error) {
+    console.error("There was an error creating the payment intent", error);
+    res.status(500).send("Payment failed");
+  }
 });
 
 ///another post request to send the data from the server to the service provider

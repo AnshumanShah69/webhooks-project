@@ -1,37 +1,46 @@
 import axios from "axios";
 import React, { useState } from "react";
+import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 
 export default function PaymentForm() {
   const [form, setForm] = useState({ name: "", email: "", amount: "" });
+  const stripe = useStripe();
+  const elements = useElements();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  // Here you would send data to your backend or payment provider
-  // alert(
-  //   `Payment submitted!\nName: ${form.name}\nEmail: ${form.email}\nAmount: $${form.amount}`
-  // ); // replacing alert with actual post request to the server.js
-
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!stripe || !elements) {
+      alert("Stripe has not loaded yet. Please try again.");
+      return;
+    }
     try {
       const response = await axios.post("http://localhost:3000/webhook", form);
-      if (response.status === 200) {
+      const clientSecret = response.data.clientSecret;
+      const cardElement = elements.getElement(CardElement);
+      const result = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: cardElement,
+          billing_details: {
+            name: form.name,
+            email: form.email,
+          },
+        },
+      });
+      if (result.error) {
+        alert("Payment failed: " + result.error.message);
+      } else if (
+        result.paymentIntent &&
+        result.paymentIntent.status === "succeeded"
+      ) {
         alert("Payment processed successfully!");
-      } else if (response.status === 400) {
-        alert("Payment has failed. Page not found 1");
-      } else {
-        alert(
-          "There was an error processing your payment. Please try again later.2"
-        );
       }
     } catch (error) {
-      ///add the remaining response text logic if you want to display it else move to catch block
       alert(
-        "There was an error processing your payment. Please try again later.3" +
+        "There was an error processing your payment. Please try again later.\n" +
           error.message
       );
     }
@@ -70,8 +79,13 @@ export default function PaymentForm() {
             required
           />
         </div>
-        {/* In a real app, you would use Stripe Elements or similar for card details */}
-        <button type="submit">Pay</button>
+        <div>
+          <label>Card Details:</label>
+          <CardElement />
+        </div>
+        <button type="submit" disabled={!stripe}>
+          Pay
+        </button>
       </form>
     </div>
   );
