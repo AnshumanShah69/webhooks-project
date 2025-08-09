@@ -8,10 +8,10 @@ const cors = require("cors");
 app.use(cors()); //Enabling CORS for all routes
 const port = 3000;
 
-app.use(bodyParser.json());
+//changed the bodyParse() from globally applied to only for the /webhook route not /stripe-webhook
 // Updating the /webhook url to recieve data from the frontend and also to create a payment intent and send to stripe
 
-app.post("/webhook", async (req, res) => {
+app.post("/webhook", bodyParser.json(), async (req, res) => {
   //recieving data from the frontend and creating a payment intent and returning the secret to the frontend
   // console.log("Received webhook data from the frontend:", req.body);
   const { name, email, amount } = req.body; //rec data from the frontend // destructuring the data from the request body
@@ -39,6 +39,31 @@ app.post("/webhook", async (req, res) => {
 app.get("/", (req, res) => {
   res.send("Webhook server is running");
 });
+///adding the post request to implement the webhook functionality
+app.post(
+  "/stripe-webhook",
+  express.raw({ type: "application/json" }),
+  (req, res) => {
+    const sig = req.headers["stripe-signature"];
+    let event;
+    try {
+      event = stripe.webhooks.constructEvent(
+        req.body,
+        sig,
+        process.env.STRIPE_WEBHOOK_SECRET
+      );
+    } catch (err) {
+      console.error("There was an error verifying the signature", err);
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+    if (event.type === "payment_intent.succeeded") {
+      const paymentIntent = event.data.object;
+      console.log("PaymentIntent was successful!", paymentIntent);
+      // Here you can handle the successful payment, e.g., update your database, send a confirmation email, etc.
+    }
+    res.json({ received: true });
+  }
+);
 
 app.listen(port, () => {
   console.log(`Webhook server is running at http://localhost:${port}`);

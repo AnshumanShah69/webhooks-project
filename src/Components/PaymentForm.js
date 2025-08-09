@@ -18,7 +18,7 @@ export default function PaymentForm() {
       return;
     }
     try {
-      const response = await axios.post("http://localhost:3000/webhook", form);
+      const response = await axios.post("http://localhost:3000/webhook", form); //send req then in the next step we will get the client secret as response
       const clientSecret = response.data.clientSecret;
       const cardElement = elements.getElement(CardElement);
       const result = await stripe.confirmCardPayment(clientSecret, {
@@ -74,7 +74,7 @@ export default function PaymentForm() {
           <input
             name="amount"
             type="number"
-            value={form.amount}
+            value={form.amount} //add the .00 decimal logic as amount is getting appended by 00 and increasing
             onChange={handleChange}
             required
           />
