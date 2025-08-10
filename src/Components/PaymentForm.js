@@ -4,6 +4,8 @@ import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 
 export default function PaymentForm() {
   const [form, setForm] = useState({ name: "", email: "", amount: "" });
+  const [loading, setLoading] = useState(false);
+
   const stripe = useStripe();
   const elements = useElements();
 
@@ -17,6 +19,7 @@ export default function PaymentForm() {
       alert("Stripe has not loaded yet. Please try again.");
       return;
     }
+    setLoading(true); ///start spinner with the request
     try {
       const response = await axios.post("http://localhost:3000/webhook", form); //send req then in the next step we will get the client secret as response
       const clientSecret = response.data.clientSecret;
@@ -30,6 +33,7 @@ export default function PaymentForm() {
           },
         },
       });
+      setLoading(false); // will hide spinner upon completion of the process
       if (result.error) {
         alert("Payment failed: " + result.error.message);
       } else if (
@@ -39,6 +43,7 @@ export default function PaymentForm() {
         alert("Payment processed successfully!");
       }
     } catch (error) {
+      setLoading(false); //if error is encountered the spinner is hidden
       alert(
         "There was an error processing your payment. Please try again later.\n" +
           error.message
@@ -49,6 +54,32 @@ export default function PaymentForm() {
   return (
     <div>
       <h2>Payment Form for webhooks</h2>
+      {loading && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            background: "rgba(255,255,255,0.7)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <div
+            className="spinner-border text-success spinner-border-lg"
+            role="status"
+            style={{
+              width: "12rem",
+              height: "12rem",
+              borderWidth: "1.5rem",
+            }}
+          ></div>
+        </div>
+      )}
       <form onSubmit={handleSubmit}>
         <div>
           <label>Name:</label>
@@ -74,7 +105,7 @@ export default function PaymentForm() {
           <input
             name="amount"
             type="number"
-            value={form.amount} //add the .00 decimal logic as amount is getting appended by 00 and increasing
+            value={form.amount}
             onChange={handleChange}
             required
           />
@@ -83,8 +114,19 @@ export default function PaymentForm() {
           <label>Card Details:</label>
           <CardElement />
         </div>
-        <button type="submit" disabled={!stripe}>
-          Pay
+        <button
+          className="btn btn-primary"
+          type="submit"
+          disabled={!stripe || loading}
+        >
+          {loading && (
+            <span
+              className="spinner-border spinner-border-sm"
+              role="status"
+              aria-hidden="true"
+            ></span>
+          )}
+          {loading ? "Processing" : "Pay"}
         </button>
       </form>
     </div>

@@ -1,3 +1,4 @@
+import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 import PaymentForm from "./Components/PaymentForm";
 import { loadStripe } from "@stripe/stripe-js";
