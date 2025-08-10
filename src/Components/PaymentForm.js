@@ -1,6 +1,7 @@
 import axios from "axios";
 import React, { useState } from "react";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import { ToastContainer, toast, Bounce } from "react-toastify";
 
 export default function PaymentForm() {
   const [form, setForm] = useState({ name: "", email: "", amount: "" });
@@ -16,7 +17,17 @@ export default function PaymentForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!stripe || !elements) {
-      alert("Stripe has not loaded yet. Please try again.");
+      toast.error("Stripe has not loaded yet. Please try again.", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+        transition: Bounce,
+      });
       return;
     }
     setLoading(true); ///start spinner with the request
@@ -35,18 +46,49 @@ export default function PaymentForm() {
       });
       setLoading(false); // will hide spinner upon completion of the process
       if (result.error) {
-        alert("Payment failed: " + result.error.message);
+        toast.error("Payment failed: " + result.error.message, {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "colored",
+          transition: Bounce,
+        });
       } else if (
         result.paymentIntent &&
         result.paymentIntent.status === "succeeded"
       ) {
-        alert("Payment processed successfully!");
+        toast.success("Payment processed successfully!", {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "colored",
+          transition: Bounce,
+        });
       }
     } catch (error) {
       setLoading(false); //if error is encountered the spinner is hidden
-      alert(
+      toast.error(
         "There was an error processing your payment. Please try again later.\n" +
-          error.message
+          error.message,
+        {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "colored",
+          transition: Bounce,
+        }
       );
     }
   };
@@ -54,6 +96,19 @@ export default function PaymentForm() {
   return (
     <div>
       <h2>Payment Form for webhooks</h2>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick={true}
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+        transition={Bounce}
+      />
       {loading && (
         <div
           style={{
