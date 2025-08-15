@@ -1,4 +1,5 @@
 require("dotenv").config(); //loads the env variables from .env file to the process.env object
+const paymentStatus = {}; ///local storage for demo
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const express = require("express");
 const bodyParser = require("body-parser");
@@ -22,8 +23,10 @@ app.post("/webhook", bodyParser.json(), async (req, res) => {
       amount: Math.round(Number(amount) * 100),
       receipt_email: email,
     });
+    paymentStatus[paymentIntent.id] = "pending"; //initial status of the payment
     res.status(200).send({
       clientSecret: paymentIntent.client_secret,
+      paymentIntentId: paymentIntent.id, // also returning the id of the payment (paymentIntent) to the frontend
     });
   } catch (error) {
     console.error("There was an error creating the payment intent", error);
@@ -57,12 +60,18 @@ app.post(
     }
     if (event.type === "payment_intent.succeeded") {
       const paymentIntent = event.data.object;
+      paymentStatus[paymentIntent.id] = "succeeded"; // the status will be updated to succeeded only if the payment is successful in this handler
       console.log("PaymentIntent was successful!", paymentIntent);
       // Here you can handle the successful payment, e.g., update your database, send a confirmation email, etc.
     }
     res.json({ received: true });
   }
 );
+
+app.get("/payment-status/:id", (req, res) => {
+  const status = paymentStatus[req.params.id] || "pending"; // default status to be set as pending in reality its undefined which is not a good practice
+  res.json({ status });
+});
 
 app.listen(port, () => {
   console.log(`Webhook server is running at http://localhost:${port}`);

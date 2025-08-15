@@ -2,11 +2,22 @@ import axios from "axios";
 import React, { useState } from "react";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { ToastContainer, toast, Bounce } from "react-toastify";
+import { useQuery } from "@tanstack/react-query";
 
 export default function PaymentForm() {
   const [form, setForm] = useState({ name: "", email: "", amount: "" });
   const [loading, setLoading] = useState(false);
-
+  const [paymentIntentId, setPaymentIntentId] = useState(null);
+  ///replacing the old query of positional argument to the object syntax of the useQuery
+  const { data: paymentStatusData } = useQuery({
+    queryKey: ["paymentStatus", paymentIntentId],
+    queryFn: () =>
+      axios
+        .get(`http://localhost:3000/payment-status/${paymentIntentId}`)
+        .then((res) => res.data),
+    enabled: !!paymentIntentId,
+    refetchInterval: 2000, // we will pol every 2000 ms
+  });
   const stripe = useStripe();
   const elements = useElements();
 
@@ -32,9 +43,10 @@ export default function PaymentForm() {
     }
     setLoading(true); ///start spinner with the request
     try {
-      const response = await axios.post("http://localhost:3000/webhook", form); //send req then in the next step we will get the client secret as response
+      const response = await axios.post("http://localhost:3000/webhook", form); //send req then in the next step we will get the client secret and the paymentIntent.id as response
       const clientSecret = response.data.clientSecret;
       const cardElement = elements.getElement(CardElement);
+      setPaymentIntentId(response.data.paymentIntentId); // Store the paymentIntent.id and setting it using the hooks
       const result = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
           card: cardElement,
@@ -92,6 +104,14 @@ export default function PaymentForm() {
       );
     }
   };
+
+  React.useEffect(() => {
+    if (paymentStatusData?.status === "succeeded") {
+      toast.success("Payment processed successfully using webhooks!");
+      setLoading(false); // Optionally stop spinner
+      // Optionally reset form or take other actions
+    }
+  }, [paymentStatusData]);
 
   return (
     <div>
