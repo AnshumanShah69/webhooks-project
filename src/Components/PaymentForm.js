@@ -5,24 +5,28 @@ import { ToastContainer, toast, Bounce } from "react-toastify";
 import { useQuery } from "@tanstack/react-query";
 
 export default function PaymentForm() {
+  const [pollingEnabled, setPollingEnabled] = useState(false); //polling limitations
+  // const [pollCount, setPollCount] = useState(0);
+
   const [form, setForm] = useState({ name: "", email: "", amount: "" });
   const [loading, setLoading] = useState(false);
   const [paymentIntentId, setPaymentIntentId] = useState(null);
   ///replacing the old query of positional argument to the object syntax of the useQuery
+
   const { data: paymentStatusData } = useQuery({
     queryKey: ["paymentStatus", paymentIntentId],
     queryFn: () =>
       axios
         .get(`http://localhost:3000/payment-status/${paymentIntentId}`)
         .then((res) => res.data),
-    enabled: !!paymentIntentId,
-    refetchInterval: 2000, // we will pol every 2000 ms
+    enabled: pollingEnabled && !!paymentIntentId, //!! is trick to convert a value to true if it exist and false if it doesn't
+    refetchInterval: 2000, // we will poll every 2000 ms
   });
   const stripe = useStripe();
   const elements = useElements();
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm({ ...form, [e.target.name]: e.target.value }); ///element that is being changed : the value that is given in input using spread operator
   };
 
   const handleSubmit = async (e) => {
@@ -57,6 +61,7 @@ export default function PaymentForm() {
         },
       });
       setLoading(false); // will hide spinner upon completion of the process
+      // if the payment is not successful then this will be triggered
       if (result.error) {
         toast.error("Payment failed: " + result.error.message, {
           position: "top-right",
@@ -104,14 +109,45 @@ export default function PaymentForm() {
       );
     }
   };
+  React.useEffect(() => {
+    if (paymentIntentId) {
+      setPollingEnabled(true);
+      // setPollCount(0);
+    }
+  }, [paymentIntentId]);
 
   React.useEffect(() => {
-    if (paymentStatusData?.status === "succeeded") {
+    if (!pollingEnabled || !paymentStatusData) return;
+
+    // Stop polling if succeeded
+    if (paymentStatusData.status === "succeeded") {
       toast.success("Payment processed successfully using webhooks!");
-      setLoading(false); // Optionally stop spinner
-      // Optionally reset form or take other actions
+      setLoading(false);
+      setPollingEnabled(false);
+      return;
     }
-  }, [paymentStatusData]);
+    if (
+      paymentStatusData.status === "requires_payment_method" ||
+      paymentStatusData.status === "canceled"
+      // paymentStatusData.status === "pending" // see if nothing is selected from success, requires_payment_method, canceled then pending is the default
+    ) {
+      setLoading(false);
+      setPollingEnabled(false);
+      toast.error("Payment failed and polling stopped");
+    }
+
+    // If not succeeded, increment poll count
+    // setPollCount((prev) => {
+    //   const next = prev + 1;
+    //   if (next >= 5) {
+    //     setPollingEnabled(false);
+    //     toast.error("Payment failed after 5 polling attempts.");
+    //   }
+    //   return next;
+    // });
+  }, [paymentStatusData, pollingEnabled]);
+
+  //starting once we recieve the paymentIntentId from the server
 
   return (
     <div>

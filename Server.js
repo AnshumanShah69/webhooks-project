@@ -59,10 +59,19 @@ app.post(
       return res.status(400).send(`Webhook Error: ${err.message}`);
     }
     if (event.type === "payment_intent.succeeded") {
-      const paymentIntent = event.data.object;
-      paymentStatus[paymentIntent.id] = "succeeded"; // the status will be updated to succeeded only if the payment is successful in this handler
-      console.log("PaymentIntent was successful!", paymentIntent);
+      const paymentIntent = event.data.object; //extract the whole object that is returned
+      paymentStatus[paymentIntent.id] = "succeeded"; //check id
+      // the status will be updated to succeeded only if the payment is successful in this handler
       // Here you can handle the successful payment, e.g., update your database, send a confirmation email, etc.
+    }
+    //here handling error cases for the frontend
+    if (event.type === "payment_intent.payment_failed") {
+      const paymentIntent = event.data.object;
+      paymentStatus[paymentIntent.id] = "requires_payment_method";
+    }
+    if (event.type === "payment_intent.canceled") {
+      const paymentIntent = event.data.object;
+      paymentStatus[paymentIntent.id] = "canceled";
     }
     res.json({ received: true });
   }
