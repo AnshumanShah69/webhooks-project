@@ -1,16 +1,67 @@
 require("dotenv").config(); //loads the env variables from .env file to the process.env object
-const paymentStatus = {}; ///local storage for demo
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+
 const express = require("express");
 const bodyParser = require("body-parser");
-const app = express();
 const cors = require("cors");
+const swaggerJsdoc = require("swagger-jsdoc");
+const swaggerUi = require("swagger-ui-express");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+
+const app = express();
+
+const swaggerOptions = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "RataPay Webhook API's",
+      version: "1.0.0",
+      description: "API documentation for RataPay Project.",
+    },
+    servers: [
+      {
+        url: "http://localhost:3000",
+      },
+    ],
+  },
+  apis: ["./Server.js"],
+};
+
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 app.use(cors()); //Enabling CORS for all routes
 const port = 3000;
+
+const paymentStatus = {}; ///local storage for demo
 
 //changed the bodyParse() from globally applied to only for the /webhook route not /stripe-webhook
 // Updating the /webhook url to recieve data from the frontend and also to create a payment intent and send to stripe
 
+/**
+ * @openapi
+ * /webhook:
+ *   post:
+ *     summary: To create a payment intent
+ *     description: Receives data from the frontend and creates a payment intent  with Stripe.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               amount:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Payment intent created successfully
+ *       500:
+ *         description: Error creating payment intent
+ */
 app.post("/webhook", bodyParser.json(), async (req, res) => {
   //recieving data from the frontend and creating a payment intent and returning the secret to the frontend
   // console.log("Received webhook data from the frontend:", req.body);
@@ -42,6 +93,15 @@ app.get("/", (req, res) => {
   res.send("Webhook server is running");
 });
 ///adding the post request to implement the webhook functionality
+/**
+ * @openapi
+ * /stripe-webhook:
+ *   post:
+ *     summary: Stripe webhook endpoint
+ *     responses:
+ *       200:
+ *         description: Webhook received from Stripe
+ */
 app.post(
   "/stripe-webhook",
   express.raw({ type: "application/json" }),
@@ -77,6 +137,28 @@ app.post(
   }
 );
 
+/**
+ * @openapi
+ * /payment-status/{id}:
+ *   get:
+ *     summary: Get payment status by PaymentIntent ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Payment status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ */
 app.get("/payment-status/:id", (req, res) => {
   const status = paymentStatus[req.params.id] || "pending"; // default status to be set as pending in reality its undefined which is not a good practice
   res.json({ status });

@@ -20,6 +20,8 @@
     "react-spinners": "^0.17.0",
     "react-toastify": "^11.0.5",
     "stripe": "^18.4.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
     "web-vitals": "^2.1.4"
   },
   "scripts": {

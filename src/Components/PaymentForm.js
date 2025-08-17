@@ -164,7 +164,7 @@ export default function PaymentForm() {
         style={{
           display: "flex",
           flexDirection: "column",
-          gap: "1.5rem",
+          gap: "1.0rem",
           padding: "2.5rem 2rem",
           background: "#fff",
           borderRadius: "12px",
@@ -174,11 +174,33 @@ export default function PaymentForm() {
           width: "100%",
         }}
       >
-        <h2 style={{ textAlign: "center", margin: 0 }}>RataPay</h2>
-        <p
-          style={{ textAlign: "center", fontStyle: "italic", marginTop: "1px" }}
+        <h2
+          style={{
+            textAlign: "center",
+            margin: 0,
+            fontWeight: 600,
+            fontSize: "2rem",
+            color: "#222",
+            letterSpacing: "0.5px",
+            marginBottom: "0.25rem",
+            textDecoration: "underline",
+          }}
         >
-          A simple and secure platform for managing payments and transactions.
+          RataPay
+        </h2>
+        <p
+          style={{
+            textAlign: "center",
+            fontStyle: "italic",
+            marginTop: 0,
+            marginBottom: "1rem",
+            color: "#555",
+            fontSize: "1.05rem",
+            fontWeight: 400,
+            letterSpacing: "0.1px",
+          }}
+        >
+          Your one-stop place to pay your insurance premium.
         </p>
         <input
           name="name"
