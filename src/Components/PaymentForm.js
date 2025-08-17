@@ -149,6 +149,10 @@ export default function PaymentForm() {
 
   //starting once we recieve the paymentIntentId from the server
 
+  const openSwaggerDocs = () => {
+    window.open("http://localhost:3000/api-docs", "_blank");
+  };
+
   return (
     <div
       style={{
@@ -252,6 +256,23 @@ export default function PaymentForm() {
           }}
         >
           {loading ? "Processing..." : "Pay"}
+        </button>
+        <button
+          type="button"
+          onClick={openSwaggerDocs}
+          style={{
+            marginTop: "0.5rem",
+            background: "#222",
+            color: "#fff",
+            border: "none",
+            borderRadius: "6px",
+            padding: "0.6rem",
+            fontSize: "1rem",
+            cursor: "pointer",
+            fontWeight: "bold",
+          }}
+        >
+          API Docs
         </button>
       </form>
       <ToastContainer
