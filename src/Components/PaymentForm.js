@@ -150,8 +150,88 @@ export default function PaymentForm() {
   //starting once we recieve the paymentIntentId from the server
 
   return (
-    <div>
-      <h2>Payment Form for webhooks</h2>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#f4f6fa",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <form
+        onSubmit={handleSubmit}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "1.5rem",
+          padding: "2.5rem 2rem",
+          background: "#fff",
+          borderRadius: "12px",
+          boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
+          minWidth: 340,
+          maxWidth: 400,
+          width: "100%",
+        }}
+      >
+        <h2 style={{ textAlign: "center", margin: 0 }}>RataPay</h2>
+        <p
+          style={{ textAlign: "center", fontStyle: "italic", marginTop: "1px" }}
+        >
+          A simple and secure platform for managing payments and transactions.
+        </p>
+        <input
+          name="name"
+          placeholder="Name"
+          value={form.name}
+          onChange={handleChange}
+          required
+          style={{ fontSize: "1rem", padding: "0.75rem" }}
+        />
+        <input
+          name="email"
+          type="email"
+          placeholder="Email"
+          value={form.email}
+          onChange={handleChange}
+          required
+          style={{ fontSize: "1rem", padding: "0.75rem" }}
+        />
+        <input
+          name="amount"
+          type="number"
+          placeholder="Amount"
+          value={form.amount}
+          onChange={handleChange}
+          required
+          style={{ fontSize: "1rem", padding: "0.75rem" }}
+        />
+        <div
+          style={{
+            padding: "0.75rem",
+            border: "1px solid #ddd",
+            borderRadius: "6px",
+          }}
+        >
+          <CardElement />
+        </div>
+        <button
+          type="submit"
+          disabled={!stripe || loading}
+          style={{
+            padding: "0.75rem",
+            fontWeight: "bold",
+            background: "#007bff",
+            color: "#fff",
+            border: "none",
+            borderRadius: "6px",
+            cursor: loading ? "not-allowed" : "pointer",
+            fontSize: "1rem",
+          }}
+        >
+          {loading ? "Processing..." : "Pay"}
+        </button>
+      </form>
       <ToastContainer
         position="top-right"
         autoClose={5000}
@@ -165,81 +245,6 @@ export default function PaymentForm() {
         theme="colored"
         transition={Bounce}
       />
-      {loading && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            background: "rgba(255,255,255,0.7)",
-            zIndex: 9999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <div
-            className="spinner-border text-success spinner-border-lg"
-            role="status"
-            style={{
-              width: "12rem",
-              height: "12rem",
-              borderWidth: "1.5rem",
-            }}
-          ></div>
-        </div>
-      )}
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Name:</label>
-          <input
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div>
-          <label>Email:</label>
-          <input
-            name="email"
-            type="email"
-            value={form.email}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div>
-          <label>Amount:</label>
-          <input
-            name="amount"
-            type="number"
-            value={form.amount}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div>
-          <label>Card Details:</label>
-          <CardElement />
-        </div>
-        <button
-          className="btn btn-primary"
-          type="submit"
-          disabled={!stripe || loading}
-        >
-          {loading && (
-            <span
-              className="spinner-border spinner-border-sm"
-              role="status"
-              aria-hidden="true"
-            ></span>
-          )}
-          {loading ? "Processing" : "Pay"}
-        </button>
-      </form>
     </div>
   );
 }
